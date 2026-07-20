@@ -7,8 +7,7 @@ const MODES = {
     standard: { baudRate: 100, markFreq: 2400, spaceFreq: 1200 }, // 1200Hz sep
     fast:     { baudRate: 200, markFreq: 4000, spaceFreq: 2000 }, // 2000Hz sep, lowered to 200 baud for safety
     reliable: { baudRate: 50,  markFreq: 1500, spaceFreq: 1000 }, // 500Hz sep
-    stealth:  { baudRate: 100, markFreq: 19000, spaceFreq: 17500 }, // 1500Hz sep
-    fun:      { baudRate: 100, markFreq: 3000, spaceFreq: 800 }   // 2200Hz sep
+    stealth:  { baudRate: 100, markFreq: 19000, spaceFreq: 17500 } // 1500Hz sep
 };
 
 const app = {
@@ -81,7 +80,7 @@ const app = {
 
         ui.resetReceiveUI();
         
-        const success = await audioManager.requestMicrophone();
+        const success = await audioManager.requestMicrophone(config);
         if (!success) {
             alert("Microphone access is required to receive messages.");
             return;
@@ -107,7 +106,7 @@ const app = {
             this.streamDecoder.pushBit(bit);
         });
 
-        this.decoderInstance.connect(audioManager.micSource);
+        this.decoderInstance.connect(audioManager.getReceiveSource());
     },
 
     stopReceiving: function() {
