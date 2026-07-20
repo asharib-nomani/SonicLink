@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SonicLink - Communicate Through Sound</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="particles"></div>
+
+    <div class="glass-container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="logo-icon">〰️</span> SonicLink
+            </div>
+            <div class="tagline">Communicate Through Sound.</div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="app-content">
+            <!-- Home Screen -->
+            <section id="screen-home" class="screen active">
+                <div class="card-grid">
+                    <button class="glass-btn primary" onclick="ui.navigateTo('screen-send')">
+                        <div class="btn-icon">📤</div>
+                        <h2>SEND</h2>
+                        <p>Transmit a message</p>
+                    </button>
+                    <button class="glass-btn secondary" onclick="ui.navigateTo('screen-receive')">
+                        <div class="btn-icon">📥</div>
+                        <h2>RECEIVE</h2>
+                        <p>Listen for a message</p>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Send Screen -->
+            <section id="screen-send" class="screen">
+                <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
+                <h2>Send Message</h2>
+                
+                <div class="mode-selector">
+                    <label>Mode:</label>
+                    <select id="send-mode">
+                        <option value="standard">Standard Mode</option>
+                        <option value="fast">Fast Mode</option>
+                        <option value="reliable">Reliable Mode</option>
+                        <option value="stealth">Stealth Mode</option>
+                        <option value="fun">Fun Mode</option>
+                    </select>
+                </div>
+
+                <div class="input-container">
+                    <textarea id="message-input" placeholder="Type your message here... (Max 1000 chars)" maxlength="1000"></textarea>
+                    <div class="char-count"><span id="char-current">0</span>/1000</div>
+                </div>
+
+                <div class="visualizer-container">
+                    <canvas id="send-visualizer"></canvas>
+                </div>
+
+                <div class="status-panel" id="send-status-panel">
+                    <div class="status-item">Speed: <span id="send-speed">--</span> bps</div>
+                    <div class="status-item">Progress: <span id="send-progress">0%</span></div>
+                </div>
+
+                <button class="glass-btn primary full-width" id="btn-transmit" onclick="app.startTransmission()">
+                    START TRANSMISSION
+                </button>
+            </section>
+
+            <!-- Receive Screen -->
+            <section id="screen-receive" class="screen">
+                <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
+                <h2>Receive Message</h2>
+
+                <div class="mode-selector">
+                    <label>Listen Mode:</label>
+                    <select id="receive-mode" onchange="app.startReceiving()">
+                        <option value="standard">Standard Mode</option>
+                        <option value="fast">Fast Mode</option>
+                        <option value="reliable">Reliable Mode</option>
+                        <option value="stealth">Stealth Mode</option>
+                        <option value="fun">Fun Mode</option>
+                    </select>
+                </div>
+
+                <div class="visualizer-container receive-mode">
+                    <canvas id="receive-visualizer"></canvas>
+                </div>
+
+                <div class="status-panel mt-2">
+                    <div class="status-item">Status: <span id="receive-status" class="status-pulse">Listening...</span></div>
+                    <div class="status-item">Signal: <span id="receive-signal">--</span></div>
+                    <div class="status-item">Quality: <span id="receive-quality">--</span></div>
+                    <div class="status-item">Packets: <span id="receive-packets">0</span></div>
+                </div>
+
+                <div class="message-display mt-4">
+                    <h3>Received Message</h3>
+                    <div class="received-content" id="received-message">
+                        Waiting for transmission...
+                    </div>
+                </div>
+
+                <div class="action-row mt-2">
+                    <button class="glass-btn small" onclick="ui.copyReceivedMessage()">Copy</button>
+                    <button class="glass-btn small" onclick="ui.downloadReceivedMessage()">Download</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils.js"></script>
+    <script src="protocol.js"></script>
+    <script src="encoder.js"></script>
+    <script src="decoder.js"></script>
+    <script src="audio.js"></script>
+    <script src="ui.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
