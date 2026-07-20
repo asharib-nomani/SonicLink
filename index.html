@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SonicLink - Communicate Through Sound</title>
+    <title>SonicLink — Communicate Through Sound</title>
+    <meta name="description" content="Transfer messages between devices using only sound. No internet required.">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -11,17 +12,14 @@
     <div id="particles"></div>
 
     <div class="glass-container">
-        <!-- Header -->
         <header>
-            <div class="logo">
-                <span class="logo-icon">〰️</span> SonicLink
-            </div>
+            <div class="logo"><span class="logo-icon">〰️</span> SonicLink</div>
             <div class="tagline">Communicate Through Sound.</div>
         </header>
 
-        <!-- Main Content Area -->
         <main id="app-content">
-            <!-- Home Screen -->
+
+            <!-- ── HOME SCREEN ─────────────────────────────────────────────── -->
             <section id="screen-home" class="screen active">
                 <div class="card-grid">
                     <button class="glass-btn primary" onclick="ui.navigateTo('screen-send')">
@@ -35,43 +33,58 @@
                         <p>Listen for a message</p>
                     </button>
                 </div>
+
+                <div class="info-card mt-4">
+                    <div class="info-row">
+                        <span class="info-label">Protocol</span>
+                        <span class="info-value">FSK · CRC-32 · Hamming FEC</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Encoding</span>
+                        <span class="info-value">Differential BFSK</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Range (typical)</span>
+                        <span class="info-value">1–4 metres</span>
+                    </div>
+                </div>
             </section>
 
-            <!-- Send Screen -->
+            <!-- ── SEND SCREEN ─────────────────────────────────────────────── -->
             <section id="screen-send" class="screen">
                 <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
                 <h2>Send Message</h2>
-                
+
                 <div class="mode-selector">
                     <label>Mode:</label>
                     <select id="send-mode">
-                        <option value="standard">Standard Mode</option>
-                        <option value="fast">Fast Mode</option>
-                        <option value="reliable">Reliable Mode</option>
-                        <option value="stealth">Stealth Mode</option>
+                        <option value="reliable">Reliable Mode (30 baud)</option>
+                        <option value="standard" selected>Standard Mode (60 baud)</option>
+                        <option value="fast">Fast Mode (100 baud)</option>
+                        <option value="stealth">Stealth Mode (40 baud, near-ultrasonic)</option>
                     </select>
                 </div>
 
-                <div class="input-container">
-                    <textarea id="message-input" placeholder="Type your message here... (Max 1000 chars)" maxlength="1000"></textarea>
+                <div class="input-container mt-2">
+                    <textarea id="message-input" placeholder="Type your message here… (Max 1000 chars)" maxlength="1000"></textarea>
                     <div class="char-count"><span id="char-current">0</span>/1000</div>
                 </div>
 
-                <div class="visualizer-container">
+                <div class="visualizer-container mt-2">
                     <canvas id="send-visualizer"></canvas>
                 </div>
 
-                <div class="status-panel" id="send-status-panel">
-                    <div class="status-item">Speed: <span id="send-speed">--</span> bps</div>
+                <div class="status-panel mt-2">
+                    <div class="status-item">Speed: <span id="send-speed">--</span> baud</div>
                     <div class="status-item">Progress: <span id="send-progress">0%</span></div>
                 </div>
 
-                <button class="glass-btn primary full-width" id="btn-transmit" onclick="app.startTransmission()">
+                <button class="glass-btn primary full-width mt-2" id="btn-transmit" onclick="app.startTransmission()">
                     START TRANSMISSION
                 </button>
             </section>
 
-            <!-- Receive Screen -->
+            <!-- ── RECEIVE SCREEN ──────────────────────────────────────────── -->
             <section id="screen-receive" class="screen">
                 <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
                 <h2>Receive Message</h2>
@@ -79,29 +92,34 @@
                 <div class="mode-selector">
                     <label>Listen Mode:</label>
                     <select id="receive-mode" onchange="app.startReceiving()">
-                        <option value="standard">Standard Mode</option>
-                        <option value="fast">Fast Mode</option>
-                        <option value="reliable">Reliable Mode</option>
-                        <option value="stealth">Stealth Mode</option>
+                        <option value="reliable">Reliable Mode (30 baud)</option>
+                        <option value="standard" selected>Standard Mode (60 baud)</option>
+                        <option value="fast">Fast Mode (100 baud)</option>
+                        <option value="stealth">Stealth Mode (40 baud, near-ultrasonic)</option>
                     </select>
                 </div>
 
-                <div class="visualizer-container receive-mode">
+                <!-- Spectrum visualizer (shows live frequency energy) -->
+                <div class="visualizer-container receive-mode mt-2">
                     <canvas id="receive-visualizer"></canvas>
                 </div>
 
+                <!-- Diagnostic / signal quality panel -->
                 <div class="status-panel mt-2">
-                    <div class="status-item">Status: <span id="receive-status" class="status-pulse">Listening...</span></div>
-                    <div class="status-item">Signal: <span id="receive-signal">--</span></div>
+                    <div class="status-item">Status: <span id="receive-status" class="status-pulse">Listening…</span></div>
+                    <div class="status-item">SNR: <span id="receive-signal">--</span></div>
                     <div class="status-item">Quality: <span id="receive-quality">--</span></div>
                     <div class="status-item">Packets: <span id="receive-packets">0</span></div>
                 </div>
+                <div class="status-panel mt-1">
+                    <div class="status-item">FEC: <span id="receive-corrected">--</span></div>
+                    <div class="status-item">Noise: <span id="receive-noise">--</span></div>
+                    <div class="status-item">Band: <span id="receive-freqband">--</span></div>
+                </div>
 
-                <div class="message-display mt-4">
+                <div class="message-display mt-2">
                     <h3>Received Message</h3>
-                    <div class="received-content" id="received-message">
-                        Waiting for transmission...
-                    </div>
+                    <div class="received-content" id="received-message">Waiting for transmission…</div>
                 </div>
 
                 <div class="action-row mt-2">
@@ -109,10 +127,10 @@
                     <button class="glass-btn small" onclick="ui.downloadReceivedMessage()">Download</button>
                 </div>
             </section>
+
         </main>
     </div>
 
-    <!-- Scripts -->
     <script src="utils.js"></script>
     <script src="protocol.js"></script>
     <script src="encoder.js"></script>

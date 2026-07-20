@@ -1,24 +1,73 @@
 /**
- * script.js
- * Main application logic, AI integration, and mode configurations
+ * script.js — SonicLink v2 Application Controller
+ *
+ * MODE CONFIGURATION
+ * ──────────────────
+ * Each mode defines:
+ *   baudRate  — symbols per second. Lower = more robust to echoes (echoes last ~20ms indoors).
+ *   markFreq  — frequency for bit '1' (Hz)
+ *   spaceFreq — frequency for bit '0' (Hz)
+ *   freqSep   — separation between mark and space (Hz). Must be >> baudRate for clean Goertzel.
+ *
+ * FREQUENCY SELECTION RATIONALE:
+ *   • All tones are in 800–5000Hz — the range where virtually all phone speakers
+ *     and microphones have flat, reliable response.
+ *   • We avoid < 800Hz (mic low-frequency noise) and > 5000Hz (speaker roll-off).
+ *   • Frequency separation ≥ 10× baudRate ensures the FFT bins for mark and space
+ *     do not overlap, giving clean discrimination.
+ *
+ * STEALTH MODE:
+ *   Uses 17000–18500Hz. Works on most laptops and some phones.
+ *   Not ultra-reliable on all hardware — users are warned.
  */
 
 const MODES = {
-    standard: { baudRate: 60, markFreq: 2200, spaceFreq: 1400 }, // 800Hz sep
-    fast:     { baudRate: 100, markFreq: 3600, spaceFreq: 2000 }, // 1600Hz sep
-    reliable: { baudRate: 30,  markFreq: 1200, spaceFreq: 800 },  // 400Hz sep
-    stealth:  { baudRate: 50,  markFreq: 18500, spaceFreq: 17500 } // 1000Hz sep
+    reliable: {
+        baudRate: 30,
+        markFreq: 1600,
+        spaceFreq: 900,
+        label: 'Reliable',
+        description: 'Most robust — works over 3m, noisy environments'
+    },
+    standard: {
+        baudRate: 60,
+        markFreq: 2400,
+        spaceFreq: 1200,
+        label: 'Standard',
+        description: 'Balanced speed and reliability'
+    },
+    fast: {
+        baudRate: 100,
+        markFreq: 3800,
+        spaceFreq: 2200,
+        label: 'Fast',
+        description: 'Quick transfer, quieter environments'
+    },
+    stealth: {
+        baudRate: 40,
+        markFreq: 18500,
+        spaceFreq: 17000,
+        label: 'Stealth',
+        description: 'Near-ultrasonic — device dependent'
+    }
 };
 
 const app = {
     decoderInstance: null,
-    streamDecoder: new protocol.StreamDecoder(),
+    streamDecoder: null,
     isTransmitting: false,
+    isReceiving: false,
+
+    init: function() {
+        this.streamDecoder = new protocol.StreamDecoder();
+    },
+
+    // ─── TRANSMISSION ──────────────────────────────────────────────────────────
 
     startTransmission: async function() {
         if (this.isTransmitting) return;
 
-        const message = document.getElementById('message-input').value;
+        const message = document.getElementById('message-input').value.trim();
         if (!message) {
             alert('Please enter a message to send.');
             return;
@@ -28,92 +77,126 @@ const app = {
         const config = MODES[modeKey];
 
         this.isTransmitting = true;
-        document.getElementById('btn-transmit').innerText = 'TRANSMITTING...';
-        document.getElementById('btn-transmit').disabled = true;
+        const btn = document.getElementById('btn-transmit');
+        btn.innerText = 'TRANSMITTING...';
+        btn.disabled = true;
 
-        ui.updateSendStatus(config.baudRate, '0');
+        ui.updateSendStatus(config.baudRate, 0);
 
-        // Frame data
-        const packetsBits = protocol.encodeMessage(message);
-        
-        // Flatten packets with a small pause (silence bits) between packets for reliability
-        const PAUSE_BITS = 10;
-        let transmissionBits = [];
-        
-        // WAKE UP SYNC sequence to help receiver lock onto the clock before preamble
-        transmissionBits.push(1, 0, 1, 0, 1, 0, 1, 0);
-
-        packetsBits.forEach(p => {
-            transmissionBits.push(...p);
-            transmissionBits.push(...Array(PAUSE_BITS).fill(0)); 
-        });
-
-        // Ensure audio context is ready
+        // Initialize AudioContext on user gesture (required by browsers)
         audioManager.initContext();
 
-        // Generate FSK Buffer
-        const audioBuffer = encoder.generateFSKBuffer(audioManager.audioCtx, transmissionBits, config);
+        // Encode message into packet bit arrays
+        const packetBitArrays = protocol.encodeMessage(message);
+        const totalPackets = packetBitArrays.length;
 
-        // Calculate time
+        // Generate the complete FSK audio buffer
+        const audioBuffer = encoder.generateTransmissionBuffer(
+            audioManager.audioCtx, packetBitArrays, config
+        );
+
         const durationSec = audioBuffer.duration;
-        let elapsed = 0;
-        
+        const startTime = Date.now();
+
         const progressInterval = setInterval(() => {
-            elapsed += 0.1;
+            const elapsed = (Date.now() - startTime) / 1000;
             const pct = Math.min(100, Math.round((elapsed / durationSec) * 100));
             ui.updateSendStatus(config.baudRate, pct);
         }, 100);
 
-        // Play
         audioManager.playBuffer(audioBuffer, () => {
             clearInterval(progressInterval);
             this.isTransmitting = false;
-            document.getElementById('btn-transmit').innerText = 'START TRANSMISSION';
-            document.getElementById('btn-transmit').disabled = false;
-            ui.updateSendStatus(config.baudRate, '100');
+            btn.innerText = 'START TRANSMISSION';
+            btn.disabled = false;
+            ui.updateSendStatus(config.baudRate, 100);
         });
     },
 
+    // ─── RECEIVING ─────────────────────────────────────────────────────────────
+
     startReceiving: async function() {
-        const modeKey = document.getElementById('receive-mode') ? document.getElementById('receive-mode').value : 'standard';
-        const config = MODES[modeKey] || MODES['standard'];
+        // Stop any existing decode session
+        this._stopDecoderInstance();
+
+        const modeKey = document.getElementById('receive-mode')?.value || 'standard';
+        const config = MODES[modeKey] || MODES.standard;
 
         ui.resetReceiveUI();
-        
+        ui.updateChannelInfo(config);
+
         const success = await audioManager.requestMicrophone(config);
         if (!success) {
-            alert("Microphone access is required to receive messages.");
+            alert('Microphone access is required to receive messages. Please allow access and try again.');
             return;
         }
 
-        if (this.decoderInstance) {
-            this.decoderInstance.disconnect();
-        }
+        this.isReceiving = true;
 
+        // Reset stream decoder
         this.streamDecoder.reset();
-        
-        this.streamDecoder.onProgress = (received, total) => {
-            ui.updateReceiveStatus('Strong', 'Good', `${received}/${total}`);
+
+        // Wire up progress callbacks
+        this.streamDecoder.onProgress = (received, total, snr, correctedBits) => {
+            const quality = this._snrToQuality(snr);
+            ui.updateReceiveStatus(snr, quality, `${received}/${total}`, correctedBits);
         };
-        
+
         this.streamDecoder.onComplete = (message) => {
             ui.showReceivedMessage(message);
         };
 
-        this.decoderInstance = new FSKDecoder(audioManager.audioCtx, config, (bit, magnitude) => {
-            // Only push bits if signal is strong enough, otherwise push 0 (silence)
-            // Magnitude threshold handling is inside FSKDecoder, so it only calls us on valid bits
-            this.streamDecoder.pushBit(bit);
-        });
+        this.streamDecoder.onSignalUpdate = (snrStr, noiseFloor) => {
+            ui.updateNoiseDisplay(noiseFloor);
+        };
 
-        this.decoderInstance.connect(audioManager.getReceiveSource());
+        // Create FFT-based decoder
+        this.decoderInstance = new FSKDecoder(
+            audioManager.audioCtx,
+            audioManager.receiveAnalyser,
+            config,
+            (bit, snr) => {
+                this.streamDecoder.pushBit(bit, snr);
+            }
+        );
+
+        this.decoderInstance.start();
     },
 
     stopReceiving: function() {
+        this.isReceiving = false;
+        this._stopDecoderInstance();
+        audioManager.stopMicrophone();
+    },
+
+    _stopDecoderInstance: function() {
         if (this.decoderInstance) {
-            this.decoderInstance.disconnect();
+            this.decoderInstance.stop();
             this.decoderInstance = null;
         }
-        audioManager.stopMicrophone();
+    },
+
+    // ─── HELPERS ───────────────────────────────────────────────────────────────
+
+    _snrToQuality: function(snr) {
+        if (typeof snr === 'string' && snr.includes('dB')) {
+            const val = parseFloat(snr);
+            if (val >= 20) return '🟢 Excellent';
+            if (val >= 12) return '🟡 Good';
+            if (val >= 8)  return '🟠 Fair';
+            return '🔴 Poor';
+        }
+        return '--';
     }
 };
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    app.init();
+
+    // Character counter
+    const input = document.getElementById('message-input');
+    if (input) {
+        input.addEventListener('input', () => ui.updateCharCount(input.value.length));
+    }
+});

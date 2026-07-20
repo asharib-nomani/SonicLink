@@ -113,7 +113,36 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
-    flex-grow: 1;
+    max-height: 280px;
+}
+
+/* Protocol info card on home screen */
+.info-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-family: 'Space Mono', monospace;
+}
+
+.info-value {
+    color: var(--neon-blue);
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
 }
 
 .glass-btn {
@@ -264,13 +293,15 @@ canvas {
 /* Status Panels */
 .status-panel {
     display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
     justify-content: space-between;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    padding: 0.8rem 1rem;
-    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    margin-top: 0.5rem;
     font-family: 'Space Mono', monospace;
-    font-size: 0.9rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
 }
 
@@ -280,9 +311,10 @@ canvas {
 }
 
 /* Utility Classes */
+.mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
 .mt-4 { margin-top: 2rem; }
-.full-width { width: 100%; margin-top: 1.5rem; font-size: 1.2rem; font-weight: 600; }
+.full-width { width: 100%; margin-top: 1rem; font-size: 1.1rem; font-weight: 600; }
 
 .status-pulse {
     animation: textPulse 1.5s infinite;
@@ -330,13 +362,7 @@ canvas {
     font-size: 0.9rem;
 }
 
-.ai-suggestions {
-    margin-top: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--neon-blue);
-    min-height: 20px;
-    font-style: italic;
-}
+/* (ai-suggestions removed — offline mode) */
 
 @media (max-width: 600px) {
     .card-grid {
