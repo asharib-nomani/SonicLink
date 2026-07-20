@@ -4,10 +4,10 @@
  */
 
 const MODES = {
-    standard: { baudRate: 100, markFreq: 2400, spaceFreq: 1200 }, // 1200Hz sep
-    fast:     { baudRate: 200, markFreq: 4000, spaceFreq: 2000 }, // 2000Hz sep, lowered to 200 baud for safety
-    reliable: { baudRate: 50,  markFreq: 1500, spaceFreq: 1000 }, // 500Hz sep
-    stealth:  { baudRate: 100, markFreq: 19000, spaceFreq: 17500 } // 1500Hz sep
+    standard: { baudRate: 60, markFreq: 2200, spaceFreq: 1400 }, // 800Hz sep
+    fast:     { baudRate: 100, markFreq: 3600, spaceFreq: 2000 }, // 1600Hz sep
+    reliable: { baudRate: 30,  markFreq: 1200, spaceFreq: 800 },  // 400Hz sep
+    stealth:  { baudRate: 50,  markFreq: 18500, spaceFreq: 17500 } // 1000Hz sep
 };
 
 const app = {

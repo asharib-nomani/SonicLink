@@ -29,6 +29,7 @@ class FSKDecoder {
         // UART / Clock recovery state
         this.lastTickBit = -1;
         this.tickCounter = 0;
+        this.ticksSinceLastEdge = 99;
     }
 
     connect(source) {
@@ -93,11 +94,13 @@ class FSKDecoder {
 
         // Clock recovery / edge detection
         if (currentTickBit !== -1) {
-            if (this.lastTickBit !== currentTickBit) {
+            this.ticksSinceLastEdge++;
+            if (this.lastTickBit !== currentTickBit && this.ticksSinceLastEdge > 2) {
                 // Edge detected! Align the clock.
                 // We want to sample exactly half a bit-period from now.
                 this.tickCounter = Math.floor(this.oversampleFactor / 2);
                 this.lastTickBit = currentTickBit;
+                this.ticksSinceLastEdge = 0;
             }
 
             this.tickCounter++;
@@ -111,6 +114,7 @@ class FSKDecoder {
             // Signal lost
             this.lastTickBit = -1;
             this.tickCounter = 0;
+            this.ticksSinceLastEdge = 99;
         }
     }
 }

@@ -7,7 +7,8 @@ const audioManager = {
     audioCtx: null,
     micStream: null,
     micSource: null,
-    bandpassFilter: null,
+    highpassFilter: null,
+    gainNode: null,
     compressor: null,
     
     // For visualizer
@@ -74,29 +75,31 @@ const audioManager = {
 
     setupFilters: function(config) {
         // Disconnect previous if any
-        if (this.bandpassFilter) this.bandpassFilter.disconnect();
+        if (this.highpassFilter) this.highpassFilter.disconnect();
+        if (this.gainNode) this.gainNode.disconnect();
         if (this.compressor) this.compressor.disconnect();
 
-        // 1. Bandpass filter to isolate the signal frequencies and drop background noise
-        this.bandpassFilter = this.audioCtx.createBiquadFilter();
-        this.bandpassFilter.type = 'bandpass';
-        // Center frequency
-        this.bandpassFilter.frequency.value = (config.markFreq + config.spaceFreq) / 2;
-        // Q factor (sharpness). Q = CenterFreq / Bandwidth.
-        const bandwidth = Math.abs(config.markFreq - config.spaceFreq) * 1.5; 
-        this.bandpassFilter.Q.value = this.bandpassFilter.frequency.value / bandwidth;
+        // 1. Highpass filter to eliminate low-frequency room rumble (< 600Hz)
+        this.highpassFilter = this.audioCtx.createBiquadFilter();
+        this.highpassFilter.type = 'highpass';
+        this.highpassFilter.frequency.value = 600;
 
-        // 2. Dynamics Compressor to act as Automatic Gain Control (AGC) for distant signals
+        // 2. Gain Node to heavily amplify the signal for long range
+        this.gainNode = this.audioCtx.createGain();
+        this.gainNode.gain.value = 30.0; // 30x boost
+
+        // 3. Dynamics Compressor acting as a limiter (prevents clipping/distortion for close range)
         this.compressor = this.audioCtx.createDynamicsCompressor();
-        this.compressor.threshold.value = -50; // Catch very faint signals
-        this.compressor.knee.value = 40;
-        this.compressor.ratio.value = 12; // Heavy compression to boost quiet parts
-        this.compressor.attack.value = 0;
-        this.compressor.release.value = 0.25;
+        this.compressor.threshold.value = -24; // start compressing early
+        this.compressor.knee.value = 30;
+        this.compressor.ratio.value = 12;
+        this.compressor.attack.value = 0.003;
+        this.compressor.release.value = 0.08;
 
-        // Connect: Mic -> Bandpass -> Compressor -> ReceiveAnalyser
-        this.micSource.connect(this.bandpassFilter);
-        this.bandpassFilter.connect(this.compressor);
+        // Connect: Mic -> Highpass -> Gain -> Compressor -> ReceiveAnalyser
+        this.micSource.connect(this.highpassFilter);
+        this.highpassFilter.connect(this.gainNode);
+        this.gainNode.connect(this.compressor);
         this.compressor.connect(this.receiveAnalyser);
     },
 
@@ -114,9 +117,13 @@ const audioManager = {
             this.micSource.disconnect();
             this.micSource = null;
         }
-        if (this.bandpassFilter) {
-            this.bandpassFilter.disconnect();
-            this.bandpassFilter = null;
+        if (this.highpassFilter) {
+            this.highpassFilter.disconnect();
+            this.highpassFilter = null;
+        }
+        if (this.gainNode) {
+            this.gainNode.disconnect();
+            this.gainNode = null;
         }
         if (this.compressor) {
             this.compressor.disconnect();
