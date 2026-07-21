@@ -5,38 +5,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SonicLink — Communicate Through Sound</title>
+
+    <!-- Primary meta -->
     <meta name="description" content="Transfer messages between devices using only sound. No internet required.">
+    <meta name="author" content="SonicLink">
+    <meta name="keywords" content="sonic, data over sound, FSK, offline messaging, audio modem">
+    <meta name="theme-color" content="#0b0f1a">
+    <meta name="color-scheme" content="dark light">
+
+    <!-- Open Graph / social preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SonicLink — Communicate Through Sound">
+    <meta property="og:description" content="Transfer messages between devices using only sound. No internet required.">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SonicLink — Communicate Through Sound">
+    <meta name="twitter:description"
+        content="Transfer messages between devices using only sound. No internet required.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono&display=swap"
         rel="stylesheet">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div id="particles"></div>
+    <noscript>
+        <p>SonicLink needs JavaScript enabled to encode and decode audio transmissions.</p>
+    </noscript>
+
+    <!-- Ambient background layer -->
+    <div id="particles" aria-hidden="true"></div>
 
     <div class="glass-container">
+
+        <!-- ── HEADER ───────────────────────────────────── -->
         <header>
-            <div class="logo"><span class="logo-icon">〰️</span> SonicLink</div>
+            <div class="logo"><span class="logo-icon" aria-hidden="true">〰️</span> SonicLink</div>
             <div class="tagline">Communicate Through Sound.</div>
         </header>
 
         <main id="app-content">
 
             <!-- ── HOME SCREEN ──────────────────────────────── -->
-            <section id="screen-home" class="screen active">
+            <section id="screen-home" class="screen active" aria-label="Home">
                 <div class="card-grid">
-                    <button class="glass-btn primary" onclick="ui.navigateTo('screen-send')">
-                        <div class="btn-icon">📤</div>
+                    <button class="glass-btn primary" type="button" title="Transmit a message"
+                        onclick="ui.navigateTo('screen-send')">
+                        <div class="btn-icon" aria-hidden="true">📤</div>
                         <h2>SEND</h2>
                         <p>Transmit a message</p>
                     </button>
-                    <button class="glass-btn secondary" onclick="ui.navigateTo('screen-receive')">
-                        <div class="btn-icon">📥</div>
+                    <button class="glass-btn secondary" type="button" title="Listen for a message"
+                        onclick="ui.navigateTo('screen-receive')">
+                        <div class="btn-icon" aria-hidden="true">📥</div>
                         <h2>RECEIVE</h2>
                         <p>Listen for a message</p>
                     </button>
                 </div>
 
+                <!-- Protocol summary -->
                 <div class="info-card mt-4">
                     <div class="info-row">
                         <span class="info-label">Protocol</span>
@@ -53,13 +86,14 @@
                 </div>
             </section>
 
-            <!-- ── SEND SCREEN ──────────────────────────── -->
-            <section id="screen-send" class="screen">
-                <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
+            <!-- ── SEND SCREEN ──────────────────────────────── -->
+            <section id="screen-send" class="screen" aria-label="Send message">
+                <button class="icon-btn back-btn" type="button" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
                 <h2>Send Message</h2>
 
+                <!-- Transmission speed / band selection -->
                 <div class="mode-selector">
-                    <label>Mode:</label>
+                    <label for="send-mode">Mode:</label>
                     <select id="send-mode">
                         <option value="reliable">Reliable Mode (30 baud)</option>
                         <option value="standard" selected>Standard Mode (60 baud)</option>
@@ -68,33 +102,39 @@
                     </select>
                 </div>
 
+                <!-- Message input -->
                 <div class="input-container mt-2">
+                    <label class="sr-only" for="message-input">Message to transmit</label>
                     <textarea id="message-input" placeholder="Type your message here… (Max 1000 chars)"
                         maxlength="1000"></textarea>
                     <div class="char-count"><span id="char-current">0</span>/1000</div>
                 </div>
 
+                <!-- Waveform preview -->
                 <div class="visualizer-container mt-2">
                     <canvas id="send-visualizer"></canvas>
                 </div>
 
+                <!-- Live transmit stats -->
                 <div class="status-panel mt-2">
                     <div class="status-item">Speed: <span id="send-speed">--</span> baud</div>
                     <div class="status-item">Progress: <span id="send-progress">0%</span></div>
                 </div>
 
-                <button class="glass-btn primary full-width mt-2" id="btn-transmit" onclick="app.startTransmission()">
+                <button class="glass-btn primary full-width mt-2" type="button" id="btn-transmit"
+                    onclick="app.startTransmission()">
                     START TRANSMISSION
                 </button>
             </section>
 
-            <!-- ── RECEIVE SCREEN ──────────────────────────────── -->
-            <section id="screen-receive" class="screen">
-                <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
+            <!-- ── RECEIVE SCREEN ───────────────────────────── -->
+            <section id="screen-receive" class="screen" aria-label="Receive message">
+                <button class="icon-btn back-btn" type="button" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
                 <h2>Receive Message</h2>
 
+                <!-- Listening band must match the sender's mode -->
                 <div class="mode-selector">
-                    <label>Listen Mode:</label>
+                    <label for="receive-mode">Listen Mode:</label>
                     <select id="receive-mode" onchange="app.startReceiving()">
                         <option value="reliable">Reliable Mode (30 baud)</option>
                         <option value="standard" selected>Standard Mode (60 baud)</option>
@@ -116,26 +156,31 @@
                     <div class="status-item">Quality: <span id="receive-quality">--</span></div>
                     <div class="status-item">Packets: <span id="receive-packets">0</span></div>
                 </div>
+
+                <!-- Error correction + noise floor readout -->
                 <div class="status-panel mt-1">
                     <div class="status-item">FEC: <span id="receive-corrected">--</span></div>
                     <div class="status-item">Noise: <span id="receive-noise">--</span></div>
                     <div class="status-item">Band: <span id="receive-freqband">--</span></div>
                 </div>
 
+                <!-- Decoded output -->
                 <div class="message-display mt-2">
                     <h3>Received Message</h3>
                     <div class="received-content" id="received-message">Waiting for transmission…</div>
                 </div>
 
                 <div class="action-row mt-2">
-                    <button class="glass-btn small" onclick="ui.copyReceivedMessage()">Copy</button>
-                    <button class="glass-btn small" onclick="ui.downloadReceivedMessage()">Download</button>
+                    <button class="glass-btn small" type="button" onclick="ui.copyReceivedMessage()">Copy</button>
+                    <button class="glass-btn small" type="button"
+                        onclick="ui.downloadReceivedMessage()">Download</button>
                 </div>
             </section>
 
         </main>
     </div>
 
+    <!-- ── SCRIPTS (load order matters) ──────────────────── -->
     <script src="utils.js"></script>
     <script src="protocol.js"></script>
     <script src="encoder.js"></script>
