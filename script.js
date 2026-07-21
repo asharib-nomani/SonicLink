@@ -58,13 +58,13 @@ const app = {
     isTransmitting: false,
     isReceiving: false,
 
-    init: function() {
+    init: function () {
         this.streamDecoder = new protocol.StreamDecoder();
     },
 
     // ─── TRANSMISSION ──────────────────────────────────────────────────────────
 
-    startTransmission: async function() {
+    startTransmission: async function () {
         if (this.isTransmitting) return;
 
         const message = document.getElementById('message-input').value.trim();
@@ -115,7 +115,7 @@ const app = {
 
     // ─── RECEIVING ─────────────────────────────────────────────────────────────
 
-    startReceiving: async function() {
+    startReceiving: async function () {
         // Stop any existing decode session
         this._stopDecoderInstance();
 
@@ -163,34 +163,34 @@ const app = {
         this.decoderInstance.start();
     },
 
-    stopReceiving: function() {
+    stopReceiving: function () {
         this.isReceiving = false;
         this._stopDecoderInstance();
         audioManager.stopMicrophone();
     },
 
-    _stopDecoderInstance: function() {
+    _stopDecoderInstance: function () {
         if (this.decoderInstance) {
             this.decoderInstance.stop();
             this.decoderInstance = null;
         }
     },
 
-    // ─── HELPERS ───────────────────────────────────────────────────────────────
+    // ─── HELPERS ────────────────────────────────────
 
-    _snrToQuality: function(snr) {
+    _snrToQuality: function (snr) {
         if (typeof snr === 'string' && snr.includes('dB')) {
             const val = parseFloat(snr);
             if (val >= 20) return '🟢 Excellent';
             if (val >= 12) return '🟡 Good';
-            if (val >= 8)  return '🟠 Fair';
+            if (val >= 8) return '🟠 Fair';
             return '🔴 Poor';
         }
         return '--';
     }
 };
 
-// ─── Boot ────────────────────────────────────────────────────────────────────
+// ─── Boot ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
 

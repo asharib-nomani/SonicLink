@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SonicLink — Communicate Through Sound</title>
     <meta name="description" content="Transfer messages between devices using only sound. No internet required.">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div id="particles"></div>
 
@@ -19,7 +22,7 @@
 
         <main id="app-content">
 
-            <!-- ── HOME SCREEN ─────────────────────────────────────────────── -->
+            <!-- ── HOME SCREEN ──────────────────────────────── -->
             <section id="screen-home" class="screen active">
                 <div class="card-grid">
                     <button class="glass-btn primary" onclick="ui.navigateTo('screen-send')">
@@ -50,7 +53,7 @@
                 </div>
             </section>
 
-            <!-- ── SEND SCREEN ─────────────────────────────────────────────── -->
+            <!-- ── SEND SCREEN ──────────────────────────── -->
             <section id="screen-send" class="screen">
                 <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
                 <h2>Send Message</h2>
@@ -66,7 +69,8 @@
                 </div>
 
                 <div class="input-container mt-2">
-                    <textarea id="message-input" placeholder="Type your message here… (Max 1000 chars)" maxlength="1000"></textarea>
+                    <textarea id="message-input" placeholder="Type your message here… (Max 1000 chars)"
+                        maxlength="1000"></textarea>
                     <div class="char-count"><span id="char-current">0</span>/1000</div>
                 </div>
 
@@ -84,7 +88,7 @@
                 </button>
             </section>
 
-            <!-- ── RECEIVE SCREEN ──────────────────────────────────────────── -->
+            <!-- ── RECEIVE SCREEN ──────────────────────────────── -->
             <section id="screen-receive" class="screen">
                 <button class="icon-btn back-btn" onclick="ui.navigateTo('screen-home')">⬅ Back</button>
                 <h2>Receive Message</h2>
@@ -106,7 +110,8 @@
 
                 <!-- Diagnostic / signal quality panel -->
                 <div class="status-panel mt-2">
-                    <div class="status-item">Status: <span id="receive-status" class="status-pulse">Listening…</span></div>
+                    <div class="status-item">Status: <span id="receive-status" class="status-pulse">Listening…</span>
+                    </div>
                     <div class="status-item">SNR: <span id="receive-signal">--</span></div>
                     <div class="status-item">Quality: <span id="receive-quality">--</span></div>
                     <div class="status-item">Packets: <span id="receive-packets">0</span></div>
@@ -139,4 +144,5 @@
     <script src="ui.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>

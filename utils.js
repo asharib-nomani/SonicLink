@@ -7,22 +7,22 @@
 
 const utils = {
 
-    // ─── Text <-> Bytes ────────────────────────────────────────────────────────
+    // ─── Text <-> Bytes ───────────────────────────────────────────────
 
-    stringToBytes: function(str) {
+    stringToBytes: function (str) {
         return new TextEncoder().encode(str);
     },
 
-    bytesToString: function(bytes) {
+    bytesToString: function (bytes) {
         return new TextDecoder().decode(new Uint8Array(bytes));
     },
 
-    // ─── Bit Conversion ────────────────────────────────────────────────────────
+    // ─── Bit Conversion ────────────────────────────────────────────
 
     /**
      * Convert a Uint8Array (or array) to a flat bit array, MSB first.
      */
-    bytesToBits: function(bytes) {
+    bytesToBits: function (bytes) {
         const bits = new Uint8Array(bytes.length * 8);
         for (let i = 0; i < bytes.length; i++) {
             for (let j = 7; j >= 0; j--) {
@@ -36,7 +36,7 @@ const utils = {
      * Convert a flat bit array to a Uint8Array, MSB first.
      * Pads with zeros if length is not a multiple of 8.
      */
-    bitsToBytes: function(bits) {
+    bitsToBytes: function (bits) {
         const byteLen = Math.ceil(bits.length / 8);
         const bytes = new Uint8Array(byteLen);
         for (let i = 0; i < byteLen; i++) {
@@ -57,7 +57,7 @@ const utils = {
     /**
      * Pre-computed CRC-32 lookup table (IEEE 802.3 polynomial 0xEDB88320)
      */
-    _crc32Table: (function() {
+    _crc32Table: (function () {
         const table = new Uint32Array(256);
         for (let i = 0; i < 256; i++) {
             let c = i;
@@ -74,7 +74,7 @@ const utils = {
      * @param {Uint8Array|Array} bytes
      * @returns {number} 32-bit unsigned integer
      */
-    crc32: function(bytes) {
+    crc32: function (bytes) {
         let crc = 0xFFFFFFFF;
         for (let i = 0; i < bytes.length; i++) {
             crc = this._crc32Table[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
@@ -85,7 +85,7 @@ const utils = {
     /**
      * Encode a 32-bit CRC value into 4 bytes (big-endian).
      */
-    crc32ToBytes: function(crc) {
+    crc32ToBytes: function (crc) {
         return new Uint8Array([
             (crc >>> 24) & 0xFF,
             (crc >>> 16) & 0xFF,
@@ -97,9 +97,9 @@ const utils = {
     /**
      * Decode 4 big-endian bytes to a 32-bit unsigned integer.
      */
-    bytesToCrc32: function(bytes, offset) {
-        return ((bytes[offset] << 24) | (bytes[offset+1] << 16) |
-                (bytes[offset+2] << 8) | bytes[offset+3]) >>> 0;
+    bytesToCrc32: function (bytes, offset) {
+        return ((bytes[offset] << 24) | (bytes[offset + 1] << 16) |
+            (bytes[offset + 2] << 8) | bytes[offset + 3]) >>> 0;
     },
 
     // ─── Hamming(7,4) Forward Error Correction ─────────────────────────────────
@@ -116,7 +116,7 @@ const utils = {
      * (upper nibble of first byte, lower nibble+parity packed). For simplicity
      * and speed, we pack each 7-bit codeword into 1 byte (1 bit wasted).
      */
-    hammingEncode: function(bytes) {
+    hammingEncode: function (bytes) {
         const out = new Uint8Array(bytes.length * 2);
         let outIdx = 0;
         for (let i = 0; i < bytes.length; i++) {
@@ -130,7 +130,7 @@ const utils = {
      * Decode Hamming(7,4) encoded bytes back to original.
      * Returns { data: Uint8Array, corrected: number } where corrected = number of fixed errors.
      */
-    hammingDecode: function(encoded) {
+    hammingDecode: function (encoded) {
         if (encoded.length % 2 !== 0) return { data: new Uint8Array(0), corrected: 0, errors: 1 };
         const out = new Uint8Array(encoded.length / 2);
         let corrected = 0;
@@ -147,7 +147,7 @@ const utils = {
      * Encode a 4-bit nibble to a 7-bit Hamming codeword (stored in low 7 bits of byte).
      * Bit positions (1-indexed): p1=1, p2=2, d1=3, p4=4, d2=5, d3=6, d4=7
      */
-    _hammingEncodeNibble: function(nibble) {
+    _hammingEncodeNibble: function (nibble) {
         const d1 = (nibble >> 3) & 1;
         const d2 = (nibble >> 2) & 1;
         const d3 = (nibble >> 1) & 1;
@@ -161,7 +161,7 @@ const utils = {
     /**
      * Decode a 7-bit Hamming codeword (low 7 bits), correcting 1-bit errors.
      */
-    _hammingDecodeNibble: function(codeword) {
+    _hammingDecodeNibble: function (codeword) {
         codeword &= 0x7F; // mask to 7 bits
         const p1 = (codeword >> 6) & 1;
         const p2 = (codeword >> 5) & 1;
@@ -183,9 +183,9 @@ const utils = {
             corrected = 1;
         }
         const nibble = ((codeword >> 4) & 1) << 3 |
-                       ((codeword >> 2) & 1) << 2 |
-                       ((codeword >> 1) & 1) << 1 |
-                       (codeword & 1);
+            ((codeword >> 2) & 1) << 2 |
+            ((codeword >> 1) & 1) << 1 |
+            (codeword & 1);
         return { nibble, corrected };
     },
 
@@ -195,7 +195,7 @@ const utils = {
      * Generate a Hann window of the given length.
      * Pre-computing is critical for performance — do it once.
      */
-    makeHannWindow: function(len) {
+    makeHannWindow: function (len) {
         const w = new Float32Array(len);
         for (let i = 0; i < len; i++) {
             w[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (len - 1)));
@@ -208,7 +208,7 @@ const utils = {
     /**
      * Compute RMS amplitude of a Float32Array of samples.
      */
-    rms: function(samples, start, len) {
+    rms: function (samples, start, len) {
         let sum = 0;
         const end = start + len;
         for (let i = start; i < end; i++) {
@@ -220,7 +220,7 @@ const utils = {
     /**
      * Fast median of a small array (used for noise floor estimation).
      */
-    median: function(arr) {
+    median: function (arr) {
         const s = [...arr].sort((a, b) => a - b);
         const mid = Math.floor(s.length / 2);
         return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
